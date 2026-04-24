@@ -1,15 +1,9 @@
 """
-current_main.py — Versión activa del bot
-=========================================
-Este archivo siempre apunta a la versión actual en desarrollo.
-Cambiarlo es lo único necesario para cambiar la versión activa.
+current_main.py — apunta siempre a la versión activa en competencia.
 
-Para submission a Kaggle, copiar el contenido de este archivo
-a un `main.py` en la raíz del proyecto.
+Versión activa: v5.1
+Última submission: 23 abril 2026
+Score Kaggle: 564.9  |  Win: 1818  |  Loss: 369
+Posición: 734 / 1161  |  Líder: 2546.4
 """
-
-# *** IMPORTAR DESDE LA VERSIÓN ACTIVA ***
-from src.bots.v1_main import agent  # noqa: F401
-
-# Cuando tengas v2 lista, cambiar a:
-# from src.bots.v2_main import agent  # noqa: F401
+from src.bots.v5_1_main import agent  # noqa: F401

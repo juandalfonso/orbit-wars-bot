@@ -1,80 +1,91 @@
-# 🛸 Orbit Wars Bot
+# 🚀 Orbit Wars Bot — juandalfonso
 
-> Bot competitivo para la competencia [Orbit Wars en Kaggle](https://www.kaggle.com/competitions/orbit-wars) — construido de forma iterativa con documentación, experimentos y versiones trazables.
+Bot para la competencia [Orbit Wars en Kaggle](https://www.kaggle.com/competitions/orbit-wars).
+Desarrollo iterativo: cada versión mejora sobre la anterior con diagnóstico de replays y torneos locales.
 
 ---
 
-## 🗂 Estructura del repositorio
+## 📊 Historial de submissions
+
+| # | Versión | Fecha | Score | Win | Loss | Posición | Nota |
+|---|---------|-------|-------|-----|------|----------|------|
+| 1 | v5.1 | 23 abr 2026 | 564.9 | 1818 | 369 | 734/1161 | Primera submission |
+
+---
+
+## 🤖 Versiones del bot
+
+### v1 — Base Sólida
+**Archivo:** `src/bots/v1_main.py`
+
+- Arquitectura simple: cada planeta busca el mejor objetivo y dispara cada turno
+- Penaliza trayectorias que cruzan el sol
+- Prioriza planetas neutrales sobre enemigos
+- Reserva defensiva fija (`MIN_DEFENSE=8`)
+- **Sin** predicción orbital — apunta a posición actual del objetivo
+
+**Resultado local:** línea base de referencia
+
+---
+
+### v5.1 — Parámetros Adaptativos + Predicción Orbital ⭐ ACTIVA
+**Archivo:** `src/bots/v5_1_main.py`
+
+**Mejoras sobre v1:**
+1. **Predicción orbital** (`aim_angle`): calcula la posición futura del objetivo con 6 iteraciones convergentes para apuntar donde estará el planeta, no donde está ahora
+2. **Parámetros adaptativos por fase:**
+   - 1 planeta → `min_defense=3, max_frac=0.85` (arranque agresivo)
+   - 2-3 planetas → `min_defense=5, max_frac=0.75` (expansión)
+   - 4+ planetas → `min_defense=8, max_frac=0.60` (consolidación)
+3. **Fallback de puntería:** si la trayectoria predicha cruza el sol, intenta apuntar directo antes de descartar el objetivo
+4. **Bonus planetas lentos:** incentivo suave de scoring para planetas con órbita lenta (dist_sol ≤ 40)
+
+**Resultado local:**
+- vs random: **9W / 1L** (10 partidas)
+- vs v1: **6W / 4L** (10 partidas)
+
+**Resultado Kaggle:**
+- Score: **564.9** | Win: 1818 | Loss: 369
+- Posición: **734 / 1161** | Líder: 2546.4
+
+**Observaciones del replay:**
+- ✅ Ninguna nave atravesó el sol
+- ⚠️ Disparos desviados observados en ciertos turnos
+- ⚠️ Sin defensa reactiva ante flotas enemigas
+
+---
+
+## 🗺️ Roadmap — próximas mejoras
+
+| Prioridad | Mejora | Impacto esperado |
+|-----------|--------|------------------|
+| Alta | Defensa reactiva ante flotas enemigas entrantes | Reducir losses |
+| Alta | Corrección de disparos desviados en replay | Subir Win validation |
+| Media | Coordinación de ataque multi-planeta | Tomar objetivos difíciles |
+| Media | Estimación de ETA de flotas enemigas | Mejor timing |
+| Baja | Aprendizaje por refuerzo (RL) | Salto de score a largo plazo |
+
+---
+
+## 🏗️ Estructura del proyecto
 
 ```
 orbit-wars-bot/
-├── README.md                      ← Este archivo
-├── docs/
-│   ├── 01_competencia.md          ← Descripción de la competencia
-│   ├── 02_mecanicas.md            ← Mecánicas del juego en detalle
-│   ├── 03_obs_y_acciones.md       ← Formato de observación y acciones
-│   ├── 04_estrategia_general.md   ← Ideas y principios estratégicos
-│   └── 05_bitacora.md             ← Bitácora de experimentos y versiones
 ├── src/
-│   ├── bots/
-│   │   ├── v1_main.py             ← Bot v1 (base sólida)
-│   │   └── current_main.py       ← Versión activa (enlace simbólico)
-│   └── utils/
-│       ├── geometry.py            ← Utilidades geométricas
-│       └── scoring.py             ← Funciones de puntuación de objetivos
-├── submissions/
-│   └── notes.md                   ← Registro de submissions a Kaggle
-├── notebooks/
-│   └── colab_lab.ipynb            ← Notebook de laboratorio para Colab
-└── logs/                          ← Logs y replays descargados de Kaggle
+│   └── bots/
+│       ├── v1_main.py         # Versión 1 — base sólida
+│       ├── v5_1_main.py       # Versión 5.1 — activa en Kaggle
+│       └── current_main.py    # Apunta a la versión activa
+├── README.md
 ```
 
 ---
 
-## 🚀 Inicio rápido
+## 🔧 Desarrollo
 
-### Opción A — Google Colab
-1. Abre `notebooks/colab_lab.ipynb` en Colab
-2. Ejecuta todas las celdas en orden
-3. El notebook instala dependencias, carga el bot y corre partidas de prueba
-
-### Opción B — Local
-```bash
-git clone https://github.com/juandalfonso/orbit-wars-bot.git
-cd orbit-wars-bot
-pip install kaggle-environments
-python -c "
-from kaggle_environments import make
-import importlib.util, sys
-spec = importlib.util.spec_from_file_location('agent_module', 'src/bots/v1_main.py')
-mod = importlib.util.load_from_spec(spec)
-spec.loader.exec_module(mod)
-env = make('orbit_wars', debug=True)
-env.run([mod.agent, 'random'])
-print([(i, s.reward) for i, s in enumerate(env.steps[-1])])
-"
-```
-
----
-
-## 📌 Versiones del bot
-
-| Versión | Estado | Descripción |
-|---------|--------|-------------|
-| v1 | ✅ Activa | Expansión segura, scoring por producción, reserva defensiva, penalización sol |
-| v2 | 🔜 Próxima | Predicción de órbitas, estimación de llegada de flotas |
-| v3 | 📅 Planeada | Defensa reactiva, refuerzos entre planetas |
-| v4 | 📅 Planeada | Ataques coordinados multi-planeta |
-| v5 | 📅 Planeada | Simulación multi-turno, tuning sistemático |
-
----
-
-## 🏆 Objetivo
-
-Ganar o quedar en el top del leaderboard de [Orbit Wars 2026](https://www.kaggle.com/competitions/orbit-wars).
-
----
-
-## 📚 Documentación
-
-Ver la carpeta [`docs/`](./docs/) para mecánicas, estrategia y bitácora de experimentos.
+Todo el desarrollo se realiza en Google Colab.
+Cada versión se prueba con:
+1. **Torneo vs random** (10 partidas) — mide robustez general
+2. **Head-to-head vs versión anterior** (10 partidas) — mide mejora real
+3. **Replay visual** — diagnóstico de comportamiento turno a turno
+4. **Diagnóstico de planetas/naves por turno** — detecta bloqueos o pérdidas de territorio
